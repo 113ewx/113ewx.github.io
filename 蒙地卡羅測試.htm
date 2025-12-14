@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退休全生命週期模擬器 (Ver 5.0 Growth)</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --accent: #4caf50;
+            --danger: #ff6b6b;
+            --warn: #f1c40f;
+            --info: #2196f3;
+            --growth: #9c27b0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tag {
+            font-size: 0.5em;
+            background: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            vertical-align: middle;
+            color: var(--growth);
+            border: 1px solid var(--growth);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+
+        input {
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 1em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        button {
+            grid-column: span 3;
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(156, 39, 176, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(156, 39, 176, 0.4);
+        }
+
+        .section-header {
+            grid-column: span 3;
+            color: var(--accent);
+            font-weight: bold;
+            margin-top: 10px;
+            border-bottom: 1px dashed #444;
+            padding-bottom: 5px;
+        }
+
+        .advisor-box {
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .advisor-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .status-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #555;
+        }
+
+        .status-card.good {
+            border-left-color: var(--accent);
+        }
+
+        .status-card.bad {
+            border-left-color: var(--danger);
+        }
+
+        .card-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .card-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .card-desc {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .solution-box {
+            grid-column: span 2;
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .solution-title {
+            color: var(--info);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .solution-item {
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            color: #ddd;
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid #ff9800;
+            color: #ff9800;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            display: none;
+            /* Default hidden */
+        }
+
+        .warning-box ul {
+            margin: 5px 0 0 20px;
+            padding: 0;
+        }
+
+        .warning-box li {
+            margin-bottom: 3px;
+        }
+
+        canvas {
+            background: #222;
+            width: 100%;
+            height: 350px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #333;
+            margin-top: 20px;
+            border: 1px solid #333;
+            cursor: crosshair;
+        }
+
+        #flowChart {
+            height: 200px;
+            /* Shorter than main chart */
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            pointer-events: none;
+            font-size: 0.85em;
+            border: 1px solid #555;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 100;
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 3px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+
+
+        /* Help Section Styles */
+        .help-section {
+            margin-top: 30px;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+
+        details {
+            background: #252525;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--info);
+            padding: 5px;
+            list-style: none;
+            /* Hide default triangle */
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: " ▼";
+            font-size: 0.8em;
+        }
+
+        details[open] summary::after {
+            content: " ▲";
+        }
+
+        .help-content {
+            padding: 15px;
+            color: #ccc;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .help-block {
+            margin-bottom: 20px;
+        }
+
+        .help-title {
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+            border-bottom: 1px dashed #444;
+            padding-bottom: 3px;
+        }
+
+        .term {
+            color: var(--warn);
+            font-weight: bold;
+        }
+
+        /* Tab Navigation Styles */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 1.1em;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: #ccc;
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom: 3px solid var(--accent);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Adjustments for Guide View */
+        #view-guide .help-section {
+            margin-top: 0;
+            border-top: none;
+            padding-top: 0;
+        }
+
+        #view-guide .help-content {
+            padding: 0;
+        }
+
+        /* --- Premium Card System (Card UI) --- */
+
+        .solution-box {
+            background: #252422;
+            /* Default Dark (Warm) */
+            border-left: 4px solid #888;
+            border-radius: 8px;
+            padding: 20px 25px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        /* Gold Card (FIRE) */
+        .solution-box.gold {
+            background: #22201c;
+            border-left-color: #FFD700;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Green Card (Investment Feasible) */
+        .solution-box.green {
+            background: #1b2224;
+            border-left-color: #2ecc71;
+        }
+
+        /* Red Card (Risk Alert) */
+        .solution-box.red {
+            background: #251b1b;
+            border-left-color: #ff6b6b;
+        }
+
+        .sol-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sol-icon {
+            font-size: 1.8em;
+            margin-right: 15px;
+        }
+
+        .sol-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .sol-body {
+            font-size: 1.1em;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .sol-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            margin: 0 2px;
+        }
+
+        .sol-tag.green {
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.15);
+        }
+
+        .sol-tag.gold {
+            color: #FFD700;
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .sol-stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .stat-val {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #eee;
+        }
+
+        .sol-note {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: right;
+            font-style: italic;
+        }
+
+        .apply-btn {
+            background: #2b3a42;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 4px 12px;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .apply-btn:hover {
+            background: var(--accent);
+            color: #1a1a1a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>全生命週期模擬器 <span class="tag">Ver 5.0 (Growth)</span></h2>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('sim')">📟 模擬器</button>
+            <button class="tab-btn" onclick="switchTab('guide')">📘 使用說明</button>
+        </div>
+
+        <!-- View 1: Simulator -->
+        <div id="view-sim" class="tab-content active">
+            <div class="grid">
+                <div class="section-header">1. 設定目標 (Target)</div>
+                <div class="input-group"><label>退休後「每月」開銷 (折算現值)</label><input type="number" id="monthlySpend"
+                        value="44000"></div>
+                <div class="input-group"><label>再工作幾年退休? (存錢期)</label><input type="number" id="workYears" value="35">
+                </div>
+                <div class="input-group"><label>退休後要活幾年? (提領期)</label><input type="number" id="retireYears" value="28">
+                </div>
+                <div class="section-header">2. 投入資源 (Input)</div>
+                <div class="input-group"><label>目前已有本金</label><input type="number" id="initialCapital" value="200000">
+                </div>
+                <div class="input-group"><label>現在「每月」投入 (起點)</label><input type="number" id="monthlyContrib"
+                        value="5000">
+                </div>
+                <div class="input-group"><label style="color: var(--growth);">投入金額年增長率 (%)</label><input type="number"
+                        id="contribGrowth" value="5" title="隨薪資成長，每年增加投入的幅度"></div>
+
+
+                <!-- Expert Params Toggle -->
+                <div style="grid-column: span 3; display: flex; align-items: center; margin-top: 10px; margin-bottom: 5px; cursor: pointer;"
+                    onclick="toggleExpert()">
+                    <div style="flex-grow: 1; height: 1px; background: #444;"></div>
+                    <div style="padding: 0 10px; color: #888; font-size: 0.9em;">⚙️ 進階參數設定 <span
+                            id="expertArrow">▼</span></div>
+                    <div style="flex-grow: 1; height: 1px; background: #444;"></div>
+                </div>
+
+                <div id="expertParams"
+                    style="display:none; grid-column: span 3; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="section-header" style="margin-top:0;">3. 環境參數 (Context)</div>
+                    <div
+                        style="grid-column: span 3; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;">
+                        <label style="color:var(--accent); font-weight:bold; margin-right:10px;">⚡ 快速模板
+                            (Templates):</label>
+                        <select id="templateSelect"
+                            style="padding: 5px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+                            <option value="custom">自訂參數 (Custom)</option>
+                        </select>
+                        <div id="templateDesc" style="margin-top:5px; font-size:0.85em; color:#aaa; font-style:italic;">
+                        </div>
+                    </div>
+
+                    <div class="input-group"><label>預期年化報酬率 (%)</label><input type="number" id="meanReturn" value="10"
+                            oninput="resetTemplate()">
+                    </div>
+                    <div class="input-group"><label>波動率/標準差 (%)</label><input type="number" id="volatility" value="15"
+                            oninput="resetTemplate()">
+                    </div>
+                    <div class="input-group"><label>預期通膨率 (%)</label><input type="number" id="inflation" value="2.5">
+                    </div>
+                    <div class="input-group"><label style="color:var(--accent)">目標成功率 (%)</label><input type="number"
+                            id="targetSuccessRate" value="90"></div>
+                </div>
+
+                <button onclick="runAnalysis()" style="margin-top: 15px;">🚀 開始模擬
+                    (含投入成長運算)</button>
+
+                <div id="warningBox" class="warning-box"></div>
+            </div>
+
+            <div id="advisorArea" class="advisor-box">
+                <div class="advisor-title">📊 智能診斷報告</div>
+                <div class="card-grid">
+                    <div class="status-card" id="cardSuccess">
+                        <div class="card-label">最終成功率</div>
+                        <div class="card-value" id="valSuccessRate">--%</div>
+                        <div class="card-desc" id="descSuccess">正在計算...</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="card-label">安全基準資產 (退休時)</div>
+                        <div class="card-value" id="valRetireAsset">--</div>
+                        <div class="card-desc" id="descRetireAsset">含投入成長的保守估值 (實質)</div>
+                        <div
+                            style="margin-top:8px; border-top:1px solid #444; padding-top:5px; font-size:0.85em; color:#888;">
+                            中位數 (PR50): <span id="valMedianAsset" style="color:#ddd">--</span></div>
+                    </div>
+                    <div class="status-card">
+                        <div class="card-label">累積投入本金 (退休時)</div>
+                        <div class="card-value" id="valTotalPrincipal">--</div>
+                        <div class="card-desc" id="descTotalPrincipal">實質價值 (扣除通膨)</div>
+                    </div>
+                    <div class="solution-box" id="solutionArea" style="display:none">
+                        <div id="solutionContent"></div>
+                    </div>
+                    <div class="solution-box" id="congratsArea"
+                        style="display:none; background: rgba(76, 175, 80, 0.1); border-color: rgba(76, 175, 80, 0.3);">
+                        <div class="solution-title" style="color: var(--accent)">🎉 恭喜！您已財富自由</div>
+                        <div style="font-size:0.95em; color:#ddd;">依據最保守的估算
+                            (忽略投資收益)，您目前的本金已大於未來所有年份的實質開銷總和。您可以隨時選擇退休，享受人生！</div>
+                    </div>
+                </div>
+            </div>
+            <div style="position: relative;">
+                <canvas id="chart"></canvas>
+                <div id="tooltip" class="chart-tooltip"></div>
+            </div>
+
+            <!-- Cash Flow Chart -->
+            <div style="margin-top: 20px; border-top: 1px dashed #444; padding-top: 10px;">
+                <div class="section-header" style="border:none; margin-bottom:5px;">💰 年度收支流向 (實質購買力)</div>
+                <div style="font-size:0.85em; color:#888; margin-bottom:10px;">長條圖顯示每年的「實質投入」(藍色)
+                    與「實質花費」(橘色)。若藍條逐年變短，代表投入增長跟不上通膨。</div>
+                <div style="position: relative;">
+                    <canvas id="flowChart"></canvas>
+                    <div id="flowTooltip" class="chart-tooltip"></div>
+                </div>
+            </div>
+
+        </div><!-- End of view-sim -->
+
+        <!-- View 2: Guide -->
+        <div id="view-guide" class="tab-content">
+            <div class="help-section">
+                <div class="help-content">
+
+                    <div class="help-block"><span class="help-title">關鍵觀念：實質價值 vs 名目價值</span>
+                        本模擬器的一大特色是全邏輯採用<strong>「實質價值 (Real Value)」</strong>運算。
+                        <ul>
+                            <li><span class="term">名目價值 (Nominal)</span>：您帳戶上實際看到的數字。例如 30 年後的一個便當賣 200 元。</li>
+                            <li><span class="term">實質價值 (Real)</span>：扣除通膨後的購買力。例如 30 年後的 200 元便當，其實只等於現在 100 元便當的價值。
+                            </li>
+                        </ul>
+                        <div
+                            style="background:rgba(255,255,255,0.05); padding:10px; border-radius:4px; margin-top:5px; font-size:0.9em;">
+                            💡 <strong>參數請填寫「名目」數值</strong><br>
+                            為了方便您對照歷史數據，輸入框請填寫市場常見的「名目報酬率」(例如台股約 10%)。系統在運算時，會自動幫您扣除您設定的「預期通膨率」，轉換為實質報酬率進行模擬。
+                        </div>
+                    </div>
+
+                    <div class="help-block"><span class="help-title">功能指南：快速模板 & 診斷卡片</span>
+                        <ul>
+                            <li><strong>⚡ 投資模板</strong>：不知道報酬率該填多少？使用「進階參數」中的快速模板，一鍵套用 0050、VTI、VT 或 60/40 股債配置的歷史長期平均數據
+                                (名目)。</li>
+                            <li><strong>👑 金色卡片 (財富自由)</strong>：代表您的本金非常雄厚。根據計算，即便未來投資完全沒賺錢
+                                (報酬率抵銷通膨)，您的本金也足夠花到終老。這是最令人安心的狀態。</li>
+                            <li><strong>✅ 綠色卡片 (投資可行)</strong>：代表本金雖然還不夠，但靠著未來的投資複利與持續投入，達成退休目標的機率極高。</li>
+                            <li><strong>💡 紅色卡片 (發現風險)</strong>：代表在運氣較差的平行宇宙中，錢可能會提早花光。系統會自動提供 A/B/C 三種補救方案建議。</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-block"><span class="help-title">關於蒙地卡羅模擬</span>
+                        傳統算法只假設每年固定賺 5%，但真實市場會大漲大跌。本系統模擬了 <strong>10,000 個平行宇宙</strong>：
+                        <ul>
+                            <li>有的宇宙運氣好 (大牛市)。</li>
+                            <li>有的宇宙運氣差 (一退休就遇到金融海嘯)。</li>
+                        </ul>
+                        我們幫您找出那些「運氣最差」的劇本 (例如 PR10)，確保即便發生了，您的退休計畫依然穩健。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- End of view-guide -->
+
+    </div><!-- End of container -->
+
+    <script>
+        // Tab Switching Logic
+        window.switchTab = function (tabId) { // Global function
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + tabId).classList.add('active');
+
+            // Update buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        /**
+         * 切換「進階參數」面板的顯示狀態
+         * Toggle visibility of the Expert Parameters panel.
+         */
+        function toggleExpert() {
+            const panel = document.getElementById('expertParams');
+            const arrow = document.getElementById('expertArrow');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'grid'; // Grid layout
+                arrow.innerText = '▲';
+            } else {
+                panel.style.display = 'none';
+                arrow.innerText = '▼';
+            }
+        }
+
+        /**
+         * Box-Muller 轉換算法
+         * 產生符合標準常態分佈 (Mean=0, Std=1) 的隨機數
+         * @returns {number} Standard Normal Random Variable
+         */
+        function randn_bm() {
+            let u = 0,
+                v = 0;
+            while (u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+            while (v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        /**
+         * 貨幣格式化 (新台幣)
+         * @param {number} num - 數值
+         * @returns {string} e.g. "NT$1,000,000"
+         */
+        function formatMoney(num) {
+            return num.toLocaleString('zh-TW', {
+                style: 'currency', currency: 'TWD', maximumFractionDigits: 0
+            });
+        }
+
+        /**
+         * 計算年金現值 (PV -> PMT)
+         * 給定本金 pv，在年化報酬率 r 下，維持 years 年，每年可領多少錢？
+         * Formula: PMT = PV * r / (1 - (1+r)^-n)
+         * @param {number} pv - Present Value (本金)
+         * @param {number} r_annual - Annual Interest Rate (年利率)
+         * @param {number} years - Number of Years (期數)
+         */
+        function calculateSafeWithdrawal(pv, r_annual, years) {
+            let r = r_annual;
+            if (r <= 0) return pv / years;
+            return (pv * r) / (1 - Math.pow(1 + r, -years));
+        }
+
+        /**
+         * 計算成長型年金終值 (FV -> PMT)
+         * 反推：為了達成未來資產 FV，現在每年需投入多少 PMT (且投入隨薪資成長 g)？
+         * Formula: PMT = FV * (r-g) / ((1+r)^n - (1+g)^n)
+         * @param {number} fv - Future Value (目標資產)
+         * @param {number} r - Investment Rate (投資報酬率)
+         * @param {number} g - Growth Rate (投入增長率)
+         * @param {number} n - Years (期數)
+         */
+        function calculateGrowingAnnuityPMT(fv, r, g, n) {
+            if (Math.abs(r - g) < 0.0001) {
+                // 當 r ≈ g 時 (L'Hopital's approximation)
+                // FV = PMT * n * (1+r)^(n-1)
+                return fv / (n * Math.pow(1 + r, n - 1));
+            }
+            return fv * (r - g) / (Math.pow(1 + r, n) - Math.pow(1 + g, n));
+        }
+
+        // 應用方案函式 (全域定義)
+        window.applySchemeA = function (extraAmount) {
+            let current = parseFloat(document.getElementById('monthlyContrib').value);
+            document.getElementById('monthlyContrib').value = Math.round(current + extraAmount);
+            runAnalysis();
+        }
+
+        window.applySchemeB = function (extraYears) {
+            let currentWork = parseInt(document.getElementById('workYears').value);
+            let currentRetire = parseInt(document.getElementById('retireYears').value);
+            document.getElementById('workYears').value = currentWork + extraYears;
+            // 假設壽命固定，延後退休 N 年 = 退休期縮短 N 年。但至少保留 1 年退休期。
+            document.getElementById('retireYears').value = Math.max(1, currentRetire - extraYears);
+            runAnalysis();
+        }
+
+        window.applySchemeC = function (newSpend) {
+            document.getElementById('monthlySpend').value = Math.round(newSpend);
+            runAnalysis();
+        }
+
+        // 核心模擬函式 (純計算邏輯，獨立於 UI)
+        /**
+         * 核心蒙地卡羅模擬函式 (Core Monte Carlo Simulation)
+         * 純計算邏輯，完全獨立於 UI，方便被「主圖表」與「求解器」共用。
+         * 
+         * @param {number} initial - 初始本金 (Present Value)
+         * @param {number} annualContrib - 首年年投入金額 (Nominal)
+         * @param {number} contribGrowth - 投入金額年增長率
+         * @param {number} annualSpend - 退休後年花費 (Real Value, because input is present value) -> Logic treats it as Real
+         * @param {number} infl - 預期通膨率
+         * @param {number} mean - 預期年化報酬率 (Nominal) -> converted to Real internally? No, logic uses Nominal return & infl.
+         * @param {number} vol - 波動率 (Standard Deviation)
+         * @param {number} workYears - 工作/存錢年期
+         * @param {number} totalYears - 總模擬年期 (Work + Retire)
+         * @param {number} simulations - 模擬次數 (e.g. 10000)
+         * @param {boolean} needHistory - 是否需要回傳完整路徑 (繪圖用)。若為 false 則僅回傳成功率 (求解器用，節省記憶體)。
+         * @returns {object} { successCount, history, successRate }
+         */
+        function coreSimulate(initial, annualContrib, contribGrowth, annualSpend, infl, mean, vol, workYears, totalYears, simulations, needHistory) {
+            let history = null;
+            // 若需要繪製圖表或分析分位數，則啟用歷史紀錄陣列
+            if (needHistory) {
+                history = Array.from({ length: totalYears + 1 }, () => []);
+            }
+
+            let successCount = 0;
+
+            // --- 平行宇宙循環 (Simulation Loop) ---
+            for (let i = 0; i < simulations; i++) {
+                let value = initial;
+                let currentAnnualContrib = annualContrib;
+
+                // t=0 初始狀態
+                if (needHistory) history[0].push(value);
+
+                let isSuccess = true;
+
+                // --- 時間軸循環 (Year Loop) ---
+                for (let t = 1; t <= totalYears; t++) {
+                    // 隨機報酬率 (Box-Muller)
+                    let randomReturn = mean + vol * randn_bm();
+
+                    if (t <= workYears) {
+                        // [Phase 1: Accumulation / 存錢期]
+                        // 資產成長 + 新投入資金
+                        value = value * (1 + randomReturn) + currentAnnualContrib;
+                        // 投入金額隨薪資成長
+                        currentAnnualContrib = currentAnnualContrib * (1 + contribGrowth);
+                    } else {
+                        // [Phase 2: Decumulation / 退休期]
+                        // 計算當年度名目花費 (Nominal Spend = Real Spend * Inflation^t)
+                        let nominalSpend = annualSpend * Math.pow(1 + infl, t);
+                        // 資產成長 - 提領花費
+                        value = value * (1 + randomReturn) - nominalSpend;
+                    }
+
+                    // 破產判定 (Bankruptcy Check)
+                    if (value < 0) {
+                        value = 0;
+                        isSuccess = false;
+                    }
+
+                    // 記錄實質價值 (Convert Nominal to Real for History)
+                    if (needHistory) {
+                        let realValue = value / Math.pow(1 + infl, t);
+                        history[t].push(realValue);
+                    }
+                }
+
+                // 終局判定：資產 > 0 即為成功 (存活)
+                if (value > 0) successCount++;
+            }
+
+            return {
+                successCount: successCount,
+                history: history,
+                successRate: (successCount / simulations) * 100
+            };
+        }
+
+        // ==========================================
+        //         3. 資產配置模板 (Templates)
+        // ==========================================
+
+        // DOM 元素引用
+        const tmplSelect = document.getElementById('templateSelect');
+        const tmplDesc = document.getElementById('templateDesc');
+
+        /**
+         * 資產配置模板數據 (Nominal Return Estimates)
+         * 採用長期歷史名目報酬率預估值 (User-Provided)
+         * - mean: 名目年化報酬率 (%)
+         * - vol: 標準差/波動率 (%)
+         */
+        const ASSET_TEMPLATES = {
+            '0050': { label: '100% 台灣 0050 (TW Large Cap)', mean: 10.0, vol: 15.0, desc: '台股代表 (名目年化 ~10.0%, 波動 15.0%)' },
+            'VTI': { label: '100% 美國 VTI (US Total Stock)', mean: 10.5, vol: 14.0, desc: '美股全市場 (名目年化 ~10.5%, 波動 14.0%)' },
+            'VT': { label: '100% 全球 VT (Global Stock)', mean: 8.4, vol: 15.0, desc: '全球分散 (名目年化 ~8.4%, 波動 15.0%)' },
+            '6040': { label: '60% 股 / 40% 債 (60/40 Portfolio)', mean: 6.5, vol: 10.0, desc: '經典股債配置 (名目年化 ~6.5%, 波動 10.0%)' }
+        };
+
+        // 初始化模板下拉選單 (避免重複執行)
+        if (tmplSelect.options.length === 1) {
+            // 1. 產生選項
+            for (let key in ASSET_TEMPLATES) {
+                let opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = ASSET_TEMPLATES[key].label;
+                tmplSelect.appendChild(opt);
+            }
+
+            // 2. 監聽選擇事件
+            tmplSelect.addEventListener('change', function () {
+                const key = this.value;
+                if (key === 'custom') {
+                    tmplDesc.innerText = "";
+                    return;
+                }
+                const data = ASSET_TEMPLATES[key];
+
+                // 自動填入參數
+                document.getElementById('meanReturn').value = data.mean;
+                document.getElementById('volatility').value = data.vol;
+                tmplDesc.innerText = data.desc;
+
+                // 立即觸發運算
+                runAnalysis();
+            });
+        }
+
+        /**
+         * 重置模板狀態為「自訂」
+         * 當使用者手動修改參數輸入框時觸發
+         */
+        function resetTemplate() {
+            document.getElementById('templateSelect').value = 'custom';
+            document.getElementById('templateDesc').innerText = "";
+        }
+
+        /**
+         * 主分析函式 (Main Analysis Procedure)
+         * 負責 UI 資料綁定、啟動模擬、並更新結果畫面
+         */
+        function runAnalysis() {
+            // ==========================================
+            //            1. 讀取與處理參數
+            // ==========================================
+            const monthlySpend = parseFloat(document.getElementById('monthlySpend').value);
+            const annualSpend = monthlySpend * 12;
+
+            const workYears = parseInt(document.getElementById('workYears').value);
+            const retireYears = parseInt(document.getElementById('retireYears').value);
+            const totalYears = workYears + retireYears;
+
+            const initial = parseFloat(document.getElementById('initialCapital').value);
+            const monthlyContrib = parseFloat(document.getElementById('monthlyContrib').value);
+            const annualContrib = monthlyContrib * 12;
+
+            // 參數：投入增長率
+            const contribGrowth = parseFloat(document.getElementById('contribGrowth').value) / 100 || 0;
+
+            const mean = parseFloat(document.getElementById('meanReturn').value) / 100 || 0.05;
+            const vol = parseFloat(document.getElementById('volatility').value) / 100 || 0.15;
+            const infl = parseFloat(document.getElementById('inflation').value) / 100 || 0.02;
+            const targetRate = parseFloat(document.getElementById('targetSuccessRate').value) || 90;
+
+            // ==========================================
+            //         2. 防呆檢查 (Sanity Check)
+            // ==========================================
+            let warnings = [];
+
+            // 負值檢查 (Negative Value Check)
+            if (workYears < 0) warnings.push("存錢期不能為負，時光機尚未發明。");
+            if (retireYears < 0) warnings.push("退休期不能為負，請珍惜生命。");
+            if (monthlyContrib < 0) warnings.push("每月投入金額不能為負數 (本系統預設工作期間為累積資產)。");
+            if (monthlySpend < 0) warnings.push("每月花費不能為負，除非您是靠光合作用生存。");
+            if (initial < 0) warnings.push("初始本金不能為負 (本模擬器僅計算資產增長，不適用於負債償還模型)。");
+
+            // 年限檢查
+            if (workYears + totalYears - workYears > 100) warnings.push("規劃總年期超過 100 年？這似乎是針對長生不老藥的規劃。");
+            if (workYears > 60) warnings.push("工作年期超過 60 年，您打算工作到 80 歲以上嗎？");
+            if (totalYears - workYears > 50) warnings.push("退休期超過 50 年，這需要非常龐大的資本。");
+
+            // 利率檢查
+            if (mean * 100 > 15) warnings.push("預期年化報酬率 > 15%，甚至高於巴菲特的長期水準，可能過度樂觀。");
+            if (vol * 100 > 30) warnings.push("波動率 > 30%，這是加密貨幣等級的波動，心臟要很大顆。");
+            if (vol * 100 < 2) warnings.push("波動率 < 2%，這比定存還穩，可能設定有誤。");
+            if (infl * 100 > 10) warnings.push("預期通膨 > 10%，這通常發生在惡性通膨時期。");
+
+            // 其他
+            if (targetRate < 50) warnings.push("目標成功率 < 50%，這跟丟銅板決定退休命運差不多。");
+
+            const warnBox = document.getElementById('warningBox');
+            if (warnings.length > 0) {
+                warnBox.style.display = 'block';
+                // 防止執行：若有邏輯嚴重錯誤 (如負時間)，應停止模擬
+                if (workYears < 0 || retireYears < 0 || monthlyContrib < 0 || monthlySpend < 0 || initial < 0) {
+                    warnBox.innerHTML = `<strong>⚠️ 數值錯誤 (模擬停止)：</strong><ul>${warnings.map(w => `<li>${w}</li>`).join('')}</ul>`;
+                    return; // Stop execution
+                } else {
+                    warnBox.innerHTML = `<strong>⚠️ 溫馨提示：</strong><ul>${warnings.map(w => `<li>${w}</li>`).join('')}</ul>`;
+                }
+            } else {
+                warnBox.style.display = 'none';
+            }
+
+            // ==========================================
+            //            3. 執行主模擬
+            // ==========================================
+
+            // 模擬次數 (主圖表使用高解析度)
+            const SIMULATIONS = 15000;
+
+            // 呼叫核心邏輯 (開啟歷史紀錄 needHistory: true)
+            let simResult = coreSimulate(
+                initial, annualContrib, contribGrowth,
+                annualSpend, infl,
+                mean, vol,
+                workYears, totalYears, SIMULATIONS,
+                true
+            );
+
+            let history = simResult.history;
+            let successCount = simResult.successCount;
+
+
+            // ==========================================
+            //         4. 數據分析 (Statistics)
+            // ==========================================
+
+            // --- 計算路徑資產 (Principal Path) ---
+            // 邏輯：Principal 是名目投入累積，但在圖表上顯示實質價值
+            // 用於繪製圖表上的灰色虛線 (顯示「如果不投資，錢會變多少」)
+            let principalHistory = [];
+            let nominalPrincipalHistory = [];
+            let currentNominalPrincipal = initial;
+            let currentAnnualContribForPrincipal = annualContrib;
+
+            // t=0
+            principalHistory.push(initial);
+            nominalPrincipalHistory.push(initial);
+
+            for (let t = 1; t <= totalYears; t++) {
+                if (t <= workYears) {
+                    currentNominalPrincipal += currentAnnualContribForPrincipal;
+                    currentAnnualContribForPrincipal = currentAnnualContribForPrincipal * (1 + contribGrowth);
+                }
+                // 退休後名目本金不變 (不再投入)
+                nominalPrincipalHistory.push(currentNominalPrincipal);
+
+                // 轉實質 (Real Value Calculation)
+                let realPrincipal = currentNominalPrincipal / Math.pow(1 + infl, t);
+                principalHistory.push(realPrincipal);
+            }
+
+            // --- 計算現金流歷史 (Bar Chart Data) ---
+            let flowHistory = [];
+            let currNomContrib = annualContrib; // Year 1 Nominal
+
+            for (let t = 1; t <= totalYears; t++) {
+                let nominalSpendAtT = annualSpend * Math.pow(1 + infl, t);
+
+                if (t <= workYears) {
+                    // 存錢期：記錄投入
+                    let realFlow = currNomContrib / Math.pow(1 + infl, t);
+                    flowHistory.push({ year: t, val: realFlow, nominal: currNomContrib, type: 'IN' });
+                    currNomContrib *= (1 + contribGrowth);
+                }
+                else {
+                    // 退休期：記錄花費 (實質花費為定值)
+                    flowHistory.push({ year: t, val: -annualSpend, nominal: -nominalSpendAtT, type: 'OUT' });
+                }
+            }
+
+            // --- 統計關鍵分位數 ---
+            const finalSuccessRate = (successCount / SIMULATIONS) * 100;
+
+            // 將所有模擬結果的「退休當下資產」排序，找出 PR 值
+            history[workYears].sort((a, b) => a - b);
+
+            // 取得對應目標成功率的「門檻資產」(例如 PR10 代表最差的 10%)
+            const riskPercentile = Math.max(0.01, (100 - targetRate) / 100);
+            const riskIndex = Math.floor(SIMULATIONS * riskPercentile);
+            const criticalRetireAsset = history[workYears][riskIndex];
+
+            // 取得中位數資產 (PR50) 供參考
+            const medianIndex = Math.floor(SIMULATIONS * 0.5);
+            const medianRetireAsset = history[workYears][medianIndex];
+
+
+            // ==========================================
+            //      5. 智能診斷求解 (Diagnostic Solver)
+            // ==========================================
+
+            // 定義：不再依賴靜態公式，而是透過數值方法 (Iterative Method) 試誤求解。
+            // 確保建議方案能適應各種非線性條件。
+
+            const SOLVER_SIMS = 2000; // 降低模擬次數以加快運算 (精度足夠)
+
+            /**
+             * 通用求解器：尋找讓成功率達標的特定參數值
+             * @param {string} type - 'extraMonthly', 'extraYears', 'safeSpend'
+             * @returns {number} bestVal - 建議的調整值
+             */
+            function solveDiagnostic(type) {
+                let lower = 0;
+                let upper = 0;
+                let bestVal = 0;
+
+                // 設定搜尋範圍
+                if (type === 'extraMonthly') {
+                    lower = 0;
+                    upper = monthlySpend * 10;
+                } else if (type === 'extraYears') {
+                    lower = 0;
+                    upper = 40;
+                } else if (type === 'safeSpend') {
+                    lower = 0;
+                    upper = monthlySpend;
+                }
+
+                // 數值分析迴圈 (12次迭代)
+                for (let iter = 0; iter < 12; iter++) {
+                    let mid = (lower + upper) / 2;
+                    let simRate = 0;
+
+                    // 依據不同類型，調整參數並執行 Micro-Simulation
+                    if (type === 'extraMonthly') {
+                        let testAnnualContrib = annualContrib + (mid * 12);
+                        // 注意：這裡是調整初始投入，後續仍保有成長率
+                        let res = coreSimulate(
+                            initial, testAnnualContrib, contribGrowth,
+                            annualSpend, infl, mean, vol, workYears, totalYears, SOLVER_SIMS, false
+                        );
+                        simRate = res.successRate;
+                    }
+                    else if (type === 'extraYears') {
+                        let testWorkYears = workYears + Math.round(mid);
+                        let testRetireYears = retireYears - Math.round(mid);
+                        if (testRetireYears < 1) testRetireYears = 1;
+
+                        let res = coreSimulate(
+                            initial, annualContrib, contribGrowth,
+                            annualSpend, infl, mean, vol,
+                            testWorkYears, testWorkYears + testRetireYears, SOLVER_SIMS, false
+                        );
+                        simRate = res.successRate;
+                    }
+                    else if (type === 'safeSpend') {
+                        let testAnnualSpend = mid * 12;
+                        let res = coreSimulate(
+                            initial, annualContrib, contribGrowth,
+                            testAnnualSpend, infl, mean, vol, workYears, totalYears, SOLVER_SIMS, false
+                        );
+                        simRate = res.successRate;
+                    }
+
+                    // 檢查結果並縮小範圍 (Binary Search Logic)
+                    if (type === 'safeSpend') {
+                        // 支出越少，成功率越高 (反向關係)
+                        if (simRate < targetRate) {
+                            upper = mid; // 失敗 -> 花太兇 -> 減少上限
+                        } else {
+                            lower = mid;
+                            bestVal = mid;
+                        }
+                    } else {
+                        // 投入/年限越多，成功率越高 (正向關係)
+                        if (simRate < targetRate) {
+                            lower = mid; // 失敗 -> 不夠努力 -> 提高下限
+                        } else {
+                            upper = mid;
+                            bestVal = mid;
+                        }
+                    }
+                }
+                return bestVal;
+            }
+
+            // ----------------------------------------------------
+
+            let extraInitialMonthly = 0;
+            let extraYears = 0;
+            let safeMonthlySpend = 0;
+            let showCongrats = false;
+
+            // --- FIRE Check (財富自由檢查) - 直觀演算法 (User Request) ---
+            // 用戶邏輯：如果 本金 > 總開銷，代表就算不做高風險投資，只求抗通膨(實質報酬0%)，也能活完。
+            // 這是最簡單直觀的判斷：我有 5000萬，剩下 50年每年花 60萬 (總需3000萬)，那當然夠。
+            // 忽略了序列風險？是的，但當覆蓋率 > 100% 時，其實容錯空間很大。
+
+            let totalNeededSimple = annualSpend * totalYears;
+
+            if (initial >= totalNeededSimple) {
+                showCongrats = true;
+            }
+
+            // 4. 更新 UI - 統一邏輯 (Unified Logic)
+            const advisor = document.getElementById('advisorArea');
+            advisor.style.display = 'block';
+
+            const cardSuccess = document.getElementById('cardSuccess');
+            const descSuccess = document.getElementById('descSuccess');
+
+            document.getElementById('valSuccessRate').innerText = finalSuccessRate.toFixed(1) + "%";
+            document.getElementById('valRetireAsset').innerText = formatMoney(criticalRetireAsset);
+            document.getElementById('descRetireAsset').innerText = `基於 PR${(riskPercentile * 100).toFixed(0)} (最差${(riskPercentile * 100).toFixed(0)}%) 的保守估值`;
+            document.getElementById('valMedianAsset').innerText = formatMoney(medianRetireAsset);
+            document.getElementById('valTotalPrincipal').innerText = formatMoney(principalHistory[workYears]);
+
+            if (showCongrats) {
+                // 情境 1: 財富自由 (金色 Gold Card)
+                cardSuccess.className = "status-card good";
+                descSuccess.innerText = "財富自由";
+
+                const conArea = document.getElementById('congratsArea');
+                conArea.className = "solution-box gold";
+                conArea.style.display = 'block';
+                // Clear inline styles to let CSS take over
+                conArea.style.background = "";
+                conArea.style.borderColor = "";
+
+                conArea.innerHTML = `
+                    <div class="sol-header">
+                        <div class="sol-icon">👑</div>
+                        <div class="sol-title" style="color:#FFD700;">恭喜！您已財富自由</div>
+                    </div>
+                    <div class="sol-body">
+                        依據最保守的估算 <span class="sol-tag gold">忽略投資收益</span>，您的本金已足以覆蓋未來所有開銷。
+                    </div>
+                    <div class="sol-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">目前本金 (Principal)</span>
+                            <span class="stat-val" style="color:#FFD700;">${formatMoney(initial)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">未來總需求 (Total Needed)</span>
+                            <span class="stat-val">${formatMoney(totalNeededSimple)}</span>
+                        </div>
+                    </div>
+                    <div class="sol-note">✨ 您可以隨時選擇退休，享受人生！</div>
+                `;
+                document.getElementById('solutionArea').style.display = 'none';
+
+            } else if (finalSuccessRate >= targetRate) {
+                // 情境 2: 投資達標 (綠色 Green Card)
+                cardSuccess.className = "status-card good";
+                descSuccess.innerText = "資金充足";
+
+                document.getElementById('congratsArea').style.display = 'none';
+                document.getElementById('solutionArea').style.display = 'block';
+                document.getElementById('solutionArea').className = "solution-box green"; // Apply Green Class
+
+                let html = `
+                    <div class="sol-header">
+                        <div class="sol-icon">✅</div>
+                        <div class="sol-title" style="color:#2ecc71;">投資計畫可行</div>
+                    </div>
+                    <div class="sol-body">
+                        靠著 <span class="sol-tag green">持續投入</span> 與 <span class="sol-tag green">複利效應</span>，您的資產增長預期可覆蓋退休開銷。
+                    </div>
+                    <div class="sol-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">目前本金</span>
+                            <span class="stat-val">${formatMoney(initial)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">未來總需求</span>
+                            <span class="stat-val">${formatMoney(totalNeededSimple)}</span>
+                        </div>
+                    </div>
+                    <div class="sol-note">(需仰賴投資回報填補本金缺口)</div>
+                `;
+                document.getElementById('solutionContent').innerHTML = html;
+
+            } else {
+                // 情境 3: 未達標 (紅色 Red Card)
+                cardSuccess.className = "status-card bad";
+                descSuccess.innerText = "未達 " + targetRate + "% 目標";
+
+                document.getElementById('congratsArea').style.display = 'none';
+                document.getElementById('solutionArea').style.display = 'block';
+                document.getElementById('solutionArea').className = "solution-box red"; // Apply Red Class
+
+                // 執行診斷求解
+                extraInitialMonthly = solveDiagnostic('extraMonthly');
+                safeMonthlySpend = solveDiagnostic('safeSpend');
+
+                // Extra Years Logic
+                extraYears = Math.round(solveDiagnostic('extraYears'));
+                if (extraYears > 20) extraYears = "20+";
+                if (extraYears === 0 && finalSuccessRate < targetRate) extraYears = 1;
+
+                // 生成建議 HTML
+                let html = `
+                    <div class="sol-header">
+                        <div class="sol-icon">💡</div>
+                        <div class="sol-title" style="color:#ff6b6b;">發現風險</div>
+                    </div>
+                    <div class="sol-body">
+                        目前的資產配置在最差情況下可能無法支撐到終老，建議調整以下參數：
+                    </div>
+                `;
+
+                if (extraInitialMonthly > 0) {
+                    html += `<div class="solution-item">
+                        <div>• 方案 A (起點加碼)：現在每月需增加 <strong style="color:var(--warn)">${formatMoney(extraInitialMonthly).replace("NT$", "")}</strong>元。</div>
+                        <button class="apply-btn" onclick="applySchemeA(${extraInitialMonthly})">套用</button>
+                    </div>`;
+                }
+                if (extraYears > 0 || typeof extraYears === 'string') {
+                    html += `<div class="solution-item">
+                        <div>• 方案 B (延後退休)：建議再多工作 <strong style="color:var(--info)">${extraYears}</strong>年。</div>
+                        <button class="apply-btn" onclick="applySchemeB(${typeof extraYears === 'number' ? extraYears : 20})">套用</button>
+                    </div>`;
+                }
+                if (safeMonthlySpend < monthlySpend) {
+                    html += `<div class="solution-item">
+                        <div>• 方案 C (節省開支)：將退休月花費降至 <strong style="color:var(--accent)">${formatMoney(safeMonthlySpend).replace("NT$", "")}</strong>元。</div>
+                        <button class="apply-btn" onclick="applySchemeC(${safeMonthlySpend})">套用</button>
+                    </div>`;
+                } else {
+                    html += `<div class="solution-item" style="color:#aaa">• 方案 C：市場波動過大，單純節流效果有限。</div>`;
+                }
+                document.getElementById('solutionContent').innerHTML = html;
+            }
+
+            drawChart(history, principalHistory, nominalPrincipalHistory, workYears, totalYears);
+            drawFlowChart(flowHistory, workYears, totalYears);
+        }
+
+        function drawFlowChart(data, workYears, totalYears) {
+            const canvas = document.getElementById('flowChart');
+            const tooltip = document.getElementById('flowTooltip');
+            const ctx = canvas.getContext('2d');
+
+            // High DPI
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width === 0) return;
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            const w = rect.width;
+            const h = rect.height;
+            const padding = { top: 20, right: 30, bottom: 30, left: 60 };
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Find Max for Y Scale (Absolute value)
+            let maxVal = 0;
+            data.forEach(d => {
+                if (Math.abs(d.val) > maxVal) maxVal = Math.abs(d.val);
+            });
+            maxVal = maxVal * 1.1; // Margin
+
+            // 零點位置 (Zero Line) - 因為有正負值
+            // 我們希望正負比例正確。 Total Range = 2 * maxVal? 
+            // 還是 Input 通常較小? 
+            // 簡單起見，設一個 Zero Y。
+
+            // 為了讓圖好看，我們檢查 Input max 和 Output max
+            let maxIn = 0;
+            let maxOut = 0; // consistent positive
+            data.forEach(d => {
+                if (d.type === 'IN' && d.val > maxIn) maxIn = d.val;
+                if (d.type === 'OUT' && Math.abs(d.val) > maxOut) maxOut = Math.abs(d.val);
+            });
+
+            // Y軸範圍： +maxIn ~ -maxOut
+            let topVal = maxIn * 1.1;
+            let bottomVal = maxOut * 1.1;
+            let totalRange = topVal + bottomVal;
+
+            // Y座標轉換
+            function getY(val) {
+                // val is positive or negative
+                // pure ratio from top
+                // Top (val = topVal) -> padding.top
+                // Bottom (val = -bottomVal) -> padding.top + chartH
+
+                let ratio = (topVal - val) / totalRange;
+                return padding.top + ratio * chartH;
+            }
+
+            function getX(year) {
+                // year 1 to totalYears
+                // bar width handling? Center align?
+                return padding.left + (year / totalYears) * chartW;
+            }
+
+            // Draw Zero Line
+            let yZero = getY(0);
+            ctx.beginPath();
+            ctx.strokeStyle = "#666";
+            ctx.moveTo(padding.left, yZero);
+            ctx.lineTo(w - padding.right, yZero);
+            ctx.stroke();
+
+            // Draw Bars
+            let barWidth = (chartW / totalYears) * 0.8;
+
+            data.forEach(d => {
+                let x = getX(d.year) - (chartW / totalYears) / 2; // Shift to be centered? 
+                // getX(t) returns right edge of t? No, linear.
+                // Let's stick to standard: getX(t) = t * step.
+                // Shift back slightly to center bar
+                x = padding.left + ((d.year - 0.5) / totalYears) * chartW - barWidth / 2;
+
+                let y = getY(d.val);
+                let height = yZero - y; // if val > 0, y < yZero, height > 0
+
+                ctx.fillStyle = d.type === 'IN' ? '#00bcd4' : '#ff9800'; // Blue vs Orange
+
+                // Draw Rect
+                // rect(x, y, w, h). If h is negative?
+                // Using geometry:
+                if (d.val >= 0) {
+                    ctx.fillRect(x, y, barWidth, height);
+                } else {
+                    ctx.fillRect(x, yZero, barWidth, -height); // Draw downwards
+                }
+            });
+
+            // Draw Axis Labels (Y)
+            ctx.fillStyle = "#888";
+            ctx.textAlign = "right";
+            ctx.font = "10px Arial";
+            // Top (+max)
+            ctx.fillText(formatMoney(maxIn).replace("NT$", ""), padding.left - 5, getY(maxIn) + 4);
+            // Bottom (-max)
+            ctx.fillText("-" + formatMoney(maxOut).replace("NT$", ""), padding.left - 5, getY(-maxOut) + 4);
+
+            // Hover Tooltip
+            canvas.onmousemove = function (e) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+
+                if (mouseX < padding.left || mouseX > w - padding.right) {
+                    tooltip.style.display = "none";
+                    return;
+                }
+
+                let ratio = (mouseX - padding.left) / chartW;
+                let year = Math.ceil(ratio * totalYears);
+                if (year < 1) year = 1;
+                if (year > totalYears) year = totalYears;
+
+                // Find data
+                let item = data.find(d => d.year === year);
+                if (!item) return;
+
+                tooltip.style.display = "block";
+
+                // Position logic (same as main chart)
+                let relX = e.clientX - rect.left;
+                let relY = e.clientY - rect.top;
+                let toolLeft = relX + 15;
+                if (toolLeft + 150 > w) toolLeft = relX - 160;
+
+                tooltip.style.left = toolLeft + "px";
+                tooltip.style.top = relY + "px"; // Near mouse
+
+                let label = item.type === 'IN' ? "實質投入" : "實質花費";
+                let color = item.type === 'IN' ? "#00bcd4" : "#ff9800";
+                let nomLabel = item.type === 'IN' ? "名目投入" : "名目花費";
+
+                tooltip.innerHTML = `
+                    <div style="font-weight:bold; border-bottom:1px solid #555;">第 ${year} 年</div>
+                    <div style="color:${color}">${label}: ${formatMoney(Math.abs(item.val))}</div>
+                    <div style="color:#aaa; font-size:0.9em; margin-top:3px;">(${nomLabel}: ${formatMoney(Math.abs(item.nominal))})</div>
+                `;
+            }
+            canvas.onmouseleave = function () {
+                tooltip.style.display = "none";
+            }
+        }
+
+        function drawChart(history, principalHistory, nominalPrincipalHistory, workYears, totalYears) {
+            const canvas = document.getElementById('chart');
+            const tooltip = document.getElementById('tooltip');
+            const ctx = canvas.getContext('2d');
+
+            // Handle High DPI
+            const dpr = window.devicePixelRatio || 1;
+            // Fix: Use offsetWidth/Height to get CSS size, then set width/height attributes for DPI
+            const rect = canvas.getBoundingClientRect();
+
+            // Setup canvas size if not valid
+            if (rect.width === 0) return;
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const w = rect.width;
+            const h = rect.height;
+
+            // Margins
+            const padding = {
+                top: 20, right: 30, bottom: 30, left: 60
+            }
+
+                ;
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.clearRect(0, 0, w, h);
+
+            // Prepare Data Lines
+            let line10 = [],
+                line50 = [],
+                line90 = [];
+            let maxVal = 0;
+
+            for (let t = 0; t <= totalYears; t++) {
+                history[t].sort((a, b) => a - b);
+                let v10 = history[t][Math.floor(history[t].length * 0.1)];
+                let v50 = history[t][Math.floor(history[t].length * 0.5)];
+                let v90 = history[t][Math.floor(history[t].length * 0.9)];
+                line10.push(v10);
+                line50.push(v50);
+                line90.push(v90);
+                if (v90 > maxVal) maxVal = v90;
+            }
+
+            // Nice Scale for Y-axis
+            maxVal = Math.ceil(maxVal * 1.1);
+            if (maxVal === 0) maxVal = 100;
+
+            function getX(year) {
+                return padding.left + (year / totalYears) * chartW;
+            }
+
+            function getY(val) {
+                return padding.top + chartH - (val / maxVal) * chartH;
+            }
+
+            // Draw Grid & Labels
+            ctx.font = "11px Arial";
+            ctx.fillStyle = "#888";
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 1;
+
+            // Y-axis grid
+            const ySteps = 5;
+
+            for (let i = 0; i <= ySteps; i++) {
+                let val = (maxVal / ySteps) * i;
+                let y = getY(val);
+
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(w - padding.right, y);
+                ctx.stroke();
+
+                // Text
+                ctx.textAlign = "right";
+                let txt = Math.round(val / 10000) + "萬";
+                if (val >= 100000000) txt = (val / 100000000).toFixed(1) + "億";
+                ctx.fillText(txt, padding.left - 8, y + 4);
+            }
+
+            // X-axis grid
+            const xSteps = Math.min(totalYears, 10);
+            const interval = Math.ceil(totalYears / xSteps);
+
+            for (let t = 0; t <= totalYears; t += interval) {
+                let x = getX(t);
+                ctx.beginPath();
+                ctx.moveTo(x, padding.top);
+                ctx.lineTo(x, padding.top + chartH);
+                ctx.stroke();
+
+                ctx.textAlign = "center";
+                ctx.fillText(t + "年", x, padding.top + chartH + 15);
+            }
+
+            // Draw Retirement Line
+            let retireX = getX(workYears);
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = "#aaa";
+            ctx.moveTo(retireX, padding.top);
+            ctx.lineTo(retireX, padding.top + chartH);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.textAlign = "left";
+            ctx.fillText("退休", retireX + 5, padding.top + 10);
+
+            // Draw Lines
+            function drawPath(data, color, width) {
+                ctx.beginPath();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = width;
+                ctx.lineJoin = "round";
+
+                for (let t = 0; t <= totalYears; t++) {
+                    let x = getX(t);
+                    let y = getY(data[t]);
+                    if (t === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                ctx.stroke();
+            }
+
+            drawPath(line90, "#2ecc71", 2);
+            drawPath(line50, "#f1c40f", 3);
+            drawPath(line10, "#ff6b6b", 2);
+            ctx.setLineDash([4, 4]); // 設定為虛線
+            drawPath(principalHistory, "rgba(255, 255, 255, 0.2)", 2); // 投入本金 (灰色虛線)
+            ctx.setLineDash([]); // 恢復實線
+
+            // --- Interaction ---
+            canvas.onmousemove = function (e) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+
+                if (mouseX < padding.left || mouseX > w - padding.right) {
+                    tooltip.style.display = "none";
+                    return;
+                }
+
+                let ratio = (mouseX - padding.left) / chartW;
+                let year = Math.round(ratio * totalYears);
+                if (year < 0) year = 0;
+                if (year > totalYears) year = totalYears;
+
+                tooltip.style.display = "block";
+
+                // Tooltip Position (Relative to container)
+                let relX = e.clientX - rect.left;
+                let relY = e.clientY - rect.top;
+
+                let toolLeft = relX + 15;
+                let toolTop = relY + 15;
+
+                // Prevent overflowing right edge of canvas
+                if (toolLeft + 220 > w) toolLeft = relX - 225;
+
+                tooltip.style.left = toolLeft + "px";
+                tooltip.style.top = toolTop + "px";
+
+                const v90 = formatMoney(line90[year]);
+                const v50 = formatMoney(line50[year]);
+                const v10 = formatMoney(line10[year]);
+                const vp = formatMoney(principalHistory[year]);
+                const vn = formatMoney(nominalPrincipalHistory[year]);
+
+                let title = `第 ${year} 年`;
+                if (year === workYears) title += " (退休點)";
+
+                tooltip.innerHTML = `
+                    <div style="font-weight:bold; margin-bottom:5px; border-bottom:1px solid #555; padding-bottom:5px;">${title}</div>
+                    <div class="tooltip-row"><span style="color:#2ecc71"><span class="dot" style="background:#2ecc71"></span>樂觀 (PR90)</span><span>${v90}</span></div>
+                    <div class="tooltip-row"><span style="color:#f1c40f"><span class="dot" style="background:#f1c40f"></span>中位 (PR50)</span><span>${v50}</span></div>
+                    <div class="tooltip-row"><span style="color:#ff6b6b"><span class="dot" style="background:#ff6b6b"></span>悲觀 (PR10)</span><span>${v10}</span></div>
+                    <div class="tooltip-row" style="margin-top:4px; border-top:1px dashed #555; padding-top:4px;"><span style="color:#888"><span class="dot" style="background:#888"></span>投入本金 (實質)</span><span>${vp}</span></div>
+                    <div class="tooltip-row" style="color:#aaa; font-size:0.9em; justify-content: flex-end;">(名目累積: ${vn})</div>
+                `;
+            }
+
+                ;
+
+            canvas.onmouseleave = function () {
+                tooltip.style.display = "none";
+            }
+
+                ;
+        }
+
+    </script>
+</body>
+
+</html>
